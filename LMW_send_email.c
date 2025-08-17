@@ -173,10 +173,26 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
 		    OL-l, OL, count);
     }
 
+    pid_t wp;
+    int status;
+    if (count == max_wait || write_error) {
+      // try to obtain the reason why
+      usleep(1000);
+      wp = waitpid(pid, &status, WNOHANG);
+      if (wp == pid ) {
+	return __LMW__process_exit_status__(status, cfg);
+      }
+      // Kill the child process since we had a write problem
+      LMW_log_error("Killing child emailer, pid %d\n", pid);
+      kill(pid, SIGTERM);
+      waitpid(pid, NULL, 0); // Clean up zombie
+      if (cfg) cfg->failures++;
+      return -3;
+    }
     
     // Wait specifically for the child process
-    int status;
-    pid_t wp = waitpid(pid, &status, WNOHANG);
+
+    wp = waitpid(pid, &status, WNOHANG);
     while ( wp == 0 && count <  max_wait) {
       if ( usleep(1000) != 0) {
 	LMW_log_error("Error in usleep: %d %s\n", errno, strerror(errno));
