@@ -139,14 +139,25 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
     void (*old_sigpipe_handler)(int) = signal(SIGPIPE, SIG_IGN);
 
 
+    // count how many time we sleep
+    int count = 0;
+    int write_error = 0;
     size_t l = strlen(body);
     ssize_t r;
     char *b=body;
-    while(l>0) {
+    while(l>0 && count < max_wait) {
       r = write(pipefd[1], b, l);
       if( r == -1) {
-	LMW_log_error("Failure in piping body to send email: %d %s\n", errno, strerror(errno));
-	break;
+	if (errno == EAGAIN || errno == EWOULDBLOCK) {
+	  // Non-blocking write would block, wait a bit and try again
+	  usleep(1000);
+	  count ++;
+	  continue;
+	} else {
+	  LMW_log_error("Failure in piping body to send email: %d %s\n", errno, strerror(errno));
+	  write_error = errno;
+	  break;
+	}
       }
       l += -r;
       b +=  r;
@@ -158,7 +169,6 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
 
     
     // Wait specifically for the child process
-    int count = 0;
     int status;
     pid_t wp = waitpid(pid, &status, WNOHANG);
     while ( wp == 0 && count <  max_wait) {
