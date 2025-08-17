@@ -53,6 +53,24 @@ static int make_nonblocking(int fd) {
     return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 }
 
+static int __LMW__process_exit_status__(int status, LMW_config *cfg)
+{
+  if (WIFEXITED(status)) {
+    // exited normally
+    int childstatus =    WEXITSTATUS(status);
+    if (childstatus) {
+      LMW_log_error("Failure in child that should send email exit code : %d %s\n",
+		    childstatus, strerror(childstatus));
+      if (cfg) cfg->failures++;
+    }
+    return childstatus;
+  } else { // subprocess was interrupted
+    LMW_log_error("Failure in child that should send email, terminated ?\n");
+    if (cfg)  cfg->failures++;
+    return -4;
+  }
+}
+
 /***
    This code will send an email to recipient, with subject, and body
    it will wait for at most max_wait milliseconds
@@ -157,22 +175,7 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
       if (cfg) cfg->failures++;
       return -2;
     }
-    
-    if (WIFEXITED(status)) {
-      // exited normally
-      int childstatus =    WEXITSTATUS(status);
-      if (childstatus) {
-	LMW_log_error("Failure in child that should send email exit code : %d\n",
-		      (childstatus));
-	if (cfg) cfg->failures++;
-	return childstatus;
-      }
-    } else { // subprocess was interrupted
-      LMW_log_error("Failure in child that should send email, terminated ?\n");
-      if (cfg)  cfg->failures++;
-      return -4;
-    }
 
-    return 0;
+    return __LMW__process_exit_status__(status, cfg);
 }
 
