@@ -89,69 +89,67 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
         // If we get here, exec failed
         LMW_log_error("Failure in exec child that should send email: %d %s\n", errno, strerror(errno));
         _exit(errno);
-    } else {
-      // Parent process
-      close(pipefd[0]); // Close read end
-
-      size_t l = strlen(body);
-      ssize_t r;
-      char *b=body;
-      while(l>0) {
-	r = write(pipefd[1], b, l);
-	if( r == -1) {
-	  LMW_log_error("Failure in piping body to send email: %d %s\n", errno, strerror(errno));
-	  break;
-	}
-	l += -r;
-	b +=  r;
+    }
+    // Parent process
+    close(pipefd[0]); // Close read end
+    
+    size_t l = strlen(body);
+    ssize_t r;
+    char *b=body;
+    while(l>0) {
+      r = write(pipefd[1], b, l);
+      if( r == -1) {
+	LMW_log_error("Failure in piping body to send email: %d %s\n", errno, strerror(errno));
+	break;
       }
-      close(pipefd[1]); // EOF for child process input
-      
-      // Wait specifically for the child process
-      int count = 0;
-      int status;
-      pid_t wp = waitpid(pid, &status, WNOHANG);
-      while ( wp == 0 && count <  LMW_MAX_WAIT) {
-	if ( usleep(1000) != 0) {
-	  LMW_log_error("Error in usleep: %d %s\n", errno, strerror(errno));
-	  break;
-	}
-	wp = waitpid(pid, &status, WNOHANG);
-	count++;
+      l += -r;
+      b +=  r;
+    }
+    close(pipefd[1]); // EOF for child process input
+    
+    // Wait specifically for the child process
+    int count = 0;
+    int status;
+    pid_t wp = waitpid(pid, &status, WNOHANG);
+    while ( wp == 0 && count <  LMW_MAX_WAIT) {
+      if ( usleep(1000) != 0) {
+	LMW_log_error("Error in usleep: %d %s\n", errno, strerror(errno));
+	break;
       }
-      
-      if ( wp == 0) {
-	LMW_log_error("Timeout in waiting for child that should send email, waited %d ms\n", count);
-	cfg->failures ++;
-	//... we are not waiting further..
-	return -2;
-      }
+      wp = waitpid(pid, &status, WNOHANG);
+      count++;
+    }
+    
+    if ( wp == 0) {
+      LMW_log_error("Timeout in waiting for child that should send email, waited %d ms\n", count);
+      cfg->failures ++;
+      //... we are not waiting further..
+      return -2;
+    }
+    
 #ifdef LMW_DEBUG
-      else {
-	LMW_log_error("For child that should send email, waited %d ms\n", count);
-      }
+    LMW_log_error("For child that should send email, waited %d ms\n", count);
 #endif
 	
-      if ( wp == -1) {
-	LMW_log_error("Failure in waiting for child that should send email\n");
-	cfg->failures ++;
-	return -2;
+    if ( wp == -1) {
+      LMW_log_error("Failure in waiting for child that should send email\n");
+      if (cfg) cfg->failures++;
+      return -2;
+    }
+    
+    if (WIFEXITED(status)) {
+      // exited normally
+      int childstatus =    WEXITSTATUS(status);
+      if (childstatus) {
+	LMW_log_error("Failure in child that should send email exit code : %d\n",
+		      (childstatus));
+	if (cfg) cfg->failures++;
+	return childstatus;
       }
-
-      if (WIFEXITED(status)) {
-	// exited normally
-	int childstatus =    WEXITSTATUS(status);
-	if (childstatus) {
-	  LMW_log_error("Failure in child that should send email exit code : %d\n",
-		       (childstatus));
-	  cfg->failures ++;
-	  return childstatus;
-	}
-      } else { // subprocess was interrupted
-	  cfg->failures ++;
-	  LMW_log_error("Failure in child that should send email, terminated ?\n");
-	return -1;
-      }
+    } else { // subprocess was interrupted
+      LMW_log_error("Failure in child that should send email, terminated ?\n");
+      if (cfg)  cfg->failures++;
+      return -1;
     }
 
     return 0;
