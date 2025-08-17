@@ -35,6 +35,7 @@
 #include <errno.h>
 #include <unistd.h>  // getpid(2)
 #include <limits.h>  // PATH_MAX
+#include <fcntl.h>
 
 
 #define LMW_log_error( msg, ...) \

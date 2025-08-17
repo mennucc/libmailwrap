@@ -46,6 +46,13 @@ void LWM_config_init(LMW_config *cfg)
   };
 };
 
+/* Function to make pipe non-blocking */
+static int make_nonblocking(int fd) {
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags == -1) return -1;
+    return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+}
+
 /***
    This code will send an email to recipient, with subject, and body
    it will wait for at most max_wait milliseconds
@@ -69,7 +76,12 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
       cfg->failures ++;
       return(-1);
     }
-    // FIXME: set O_NONBLOCK on the pipe
+
+    // Make write end non-blocking to help avoid SIGPIPE issues
+    if (make_nonblocking(pipefd[1]) == -1) {
+        LMW_log_error("Warning: could not make pipe non-blocking: %d %s\n", errno, strerror(errno));
+        // Continue anyway - this is not fatal
+    }
     
     pid = fork();
     if (pid == -1) {
