@@ -62,7 +62,8 @@ static int make_nonblocking(int fd) {
    -1 could not invoke /bin/mail
    -2 PIPE ERROR when sending body
    -3 waiting timeout, child did not finish in less than LMW_MAX_WAIT milliseconds
-   >0 error in /bin/mail
+   -4 child process was terminated by signal
+   >0 error code from /bin/mail
 */
 
 int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) {
@@ -169,7 +170,7 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
     } else { // subprocess was interrupted
       LMW_log_error("Failure in child that should send email, terminated ?\n");
       if (cfg)  cfg->failures++;
-      return -1;
+      return -4;
     }
 
     return 0;
