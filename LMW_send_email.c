@@ -72,6 +72,13 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
     int max_wait = cfg ? cfg->max_wait : LMW_MAX_WAIT;
     char *args[] = {mailer, "-s", subject, recipient, NULL};
     
+    // Handle null parameters
+    if (!recipient || !subject || !body) {
+        LMW_log_error("Null parameter passed to LMW_send_email\n");
+        if (cfg) cfg->failures++;
+        return -1;
+    }
+
     if (pipe(pipefd) == -1) {
       LMW_log_error("Failure in creating pipe to send email: %d %s\n", errno, strerror(errno));
       if (cfg) cfg->failures ++;
