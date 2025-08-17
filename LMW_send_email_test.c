@@ -47,12 +47,26 @@
 int main(int argc , char *argv[])
 {
 
-  if(argc<4) {
-    fprintf(stderr,"Usage:  %s RECIPIENT SUBJECT BODY\n",argv[0]);
+  if(argc<3) {
+    fprintf(stderr,"Usage:  %s RECIPIENT SUBJECT [BODY]\n",argv[0]);
     return(0);
   }
+
+  char *b;
+  if(argc==3) {
+    const int L=1000000;
+    b = calloc(1,L+1);
+    for (unsigned int i=0 ; i<L-1 ; i++ ) {
+      if ( 0 == ( i & 15))
+	b[i]='\n';
+      else
+	b[i]='Y';
+    }
+  } else {
+    b = argv[3];
+  }
   
-  int r =LMW_send_email(argv[1],argv[2],argv[3]) ;
+  int r =LMW_send_email(argv[1],argv[2],b) ;
   fprintf(stdout,"return code [ %d ] \n\n",r);
   return r;
 }

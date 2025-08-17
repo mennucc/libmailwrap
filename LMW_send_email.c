@@ -79,13 +79,15 @@ int LMW_send_email(char *recipient, char *subject, char *body) {
 
       size_t l = strlen(body);
       ssize_t r;
+      char *b=body;
       while(l>0) {
-	r = write(pipefd[1], body, l);
+	r = write(pipefd[1], b, l);
 	if( r == -1) {
 	  LMW_log_error("Failure in piping body to send email: %d %s", errno, strerror(errno));
 	  break;
 	}
-	l = l-r;
+	l += -r;
+	b +=  r;
       }
       close(pipefd[1]); // EOF for child process input
       
