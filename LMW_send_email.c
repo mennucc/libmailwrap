@@ -143,6 +143,7 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
     int count = 0;
     int write_error = 0;
     size_t l = strlen(body);
+    const size_t OL = l;
     ssize_t r;
     char *b=body;
     while(l>0 && count < max_wait) {
@@ -166,6 +167,11 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
 
     // Restore previous SIGPIPE handler
     signal(SIGPIPE, old_sigpipe_handler);
+
+    if (count == max_wait) {
+      LMW_log_error("Timeout in piping to child that should send email, only %lu of %lu sent, waited %d ms\n",
+		    OL-l, OL, count);
+    }
 
     
     // Wait specifically for the child process
