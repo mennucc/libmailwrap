@@ -70,5 +70,10 @@ int main(int argc , char *argv[])
   
   int r =LMW_send_email(argv[1], argv[2], b ,cfg) ;
   fprintf(stdout,"return code [ %d ] \n\n",r);
+
+  if(argc==3)
+    free(b);
+  free(cfg);
+  
   return r;
 }
