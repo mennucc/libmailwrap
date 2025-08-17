@@ -52,6 +52,8 @@ int main(int argc , char *argv[])
     return(0);
   }
 
+  LMW_config *cfg = malloc(sizeof(LMW_config));
+  LWM_config_init(cfg);
   char *b;
   if(argc==3) {
     const int L=1000000;
@@ -66,7 +68,7 @@ int main(int argc , char *argv[])
     b = argv[3];
   }
   
-  int r =LMW_send_email(argv[1],argv[2],b) ;
+  int r =LMW_send_email(argv[1], argv[2], b ,cfg) ;
   fprintf(stdout,"return code [ %d ] \n\n",r);
   return r;
 }

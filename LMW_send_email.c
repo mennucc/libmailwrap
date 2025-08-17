@@ -31,6 +31,21 @@
 #define LMW_MAILER "/bin/mail"
 #define LMW_MAX_WAIT 900 // in milliseconds
 
+typedef struct {
+  char *mailer;
+  int max_wait;  // in milliseconds
+  int failures;
+} LMW_config;
+
+
+void LWM_config_init(LMW_config *cfg)
+{
+  *cfg = (LMW_config) {
+    .mailer = LMW_MAILER,
+    .max_wait = LMW_MAX_WAIT,
+    .failures = 0,
+  };
+};
 /* this code will send an email to recipient, with subject, and body 
    it will wait for at most 50milliseconds 
    (to avoid hanging the caller, if /bin/mail hangs) 
@@ -46,7 +61,7 @@
 
 
 
-int LMW_send_email(char *recipient, char *subject, char *body) {
+int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) {
     int pipefd[2];
     pid_t pid;
     char *args[] = {LMW_MAILER, "-s", subject, recipient,  NULL};
