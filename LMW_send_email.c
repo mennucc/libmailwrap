@@ -68,12 +68,13 @@ static int make_nonblocking(int fd) {
 int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) {
     int pipefd[2];
     pid_t pid;
-    char *args[] = {LMW_MAILER, "-s", subject, recipient,  NULL};
-
+    char *mailer = cfg ? cfg->mailer : LMW_MAILER;
+    int max_wait = cfg ? cfg->max_wait : LMW_MAX_WAIT;
+    char *args[] = {mailer, "-s", subject, recipient, NULL};
     
     if (pipe(pipefd) == -1) {
       LMW_log_error("Failure in creating pipe to send email: %d %s\n", errno, strerror(errno));
-      cfg->failures ++;
+      if (cfg) cfg->failures ++;
       return(-1);
     }
 
@@ -85,9 +86,9 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
     
     pid = fork();
     if (pid == -1) {
-      cfg->failures ++;
       LMW_log_error("Failure in forking child that should send email: %d %s\n",
 		    errno, strerror(errno));
+      if (cfg) cfg->failures++;
       return(-1);
     }
 
@@ -123,7 +124,7 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
     int count = 0;
     int status;
     pid_t wp = waitpid(pid, &status, WNOHANG);
-    while ( wp == 0 && count <  LMW_MAX_WAIT) {
+    while ( wp == 0 && count <  max_wait) {
       if ( usleep(1000) != 0) {
 	LMW_log_error("Error in usleep: %d %s\n", errno, strerror(errno));
 	break;
@@ -134,7 +135,7 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
     
     if ( wp == 0) {
       LMW_log_error("Timeout in waiting for child that should send email, waited %d ms\n", count);
-      cfg->failures ++;
+      if (cfg) cfg->failures ++;
       //... we are not waiting further..
       return -2;
     }
