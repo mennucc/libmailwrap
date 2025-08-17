@@ -69,6 +69,7 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
     
     if (pipe(pipefd) == -1) {
       LMW_log_error("Failure in creating pipe to send email: %d %s", errno, strerror(errno));
+      cfg->failures ++;
       return(-1);
     }
     // FIXME: set O_NONBLOCK on the pipe
@@ -76,6 +77,7 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
     pid = fork();
     if (pid == -1) {
       LMW_log_error("Failure in forking child that should send email: %d %s", errno, strerror(errno));
+      cfg->failures ++;
       return(-1);
     }
 
@@ -87,6 +89,7 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
 
         execvp(args[0], args);
 	LMW_log_error("Failure in exec child that should send email: %d %s", errno, strerror(errno));
+	cfg->failures ++;
 	return errno;
     } else {
       // Parent process
@@ -121,6 +124,7 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
       
       if ( wp == 0) {
 	LMW_log_error("Timeout in waiting for child that should send email, waited %d ms", count);
+	cfg->failures ++;
 	//... we are not waiting further..
 	return -2;
       }
@@ -132,6 +136,7 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
 	
       if ( wp == -1) {
 	LMW_log_error("Failure in waiting for child that should send email");
+	cfg->failures ++;
 	return -2;
       }
 
@@ -141,10 +146,12 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
 	if (childstatus) {
 	  LMW_log_error("Failure in child that should send email exit code : %d",
 		       (childstatus));
+	  cfg->failures ++;
 	  return childstatus;
 	}
       } else { // subprocess was interrupted
 	  LMW_log_error("Failure in child that should send email, terminated ?");
+	  cfg->failures ++;
 	return -1;
       }
     }
