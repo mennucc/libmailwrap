@@ -37,7 +37,6 @@ typedef struct {
   int failures;
 } LMW_config;
 
-
 void LWM_config_init(LMW_config *cfg)
 {
   *cfg = (LMW_config) {
@@ -46,8 +45,10 @@ void LWM_config_init(LMW_config *cfg)
     .failures = 0,
   };
 };
-/* this code will send an email to recipient, with subject, and body 
-   it will wait for at most 50milliseconds 
+
+/***
+   This code will send an email to recipient, with subject, and body
+   it will wait for at most max_wait milliseconds
    (to avoid hanging the caller, if /bin/mail hangs) 
    and return an exit value: 
    0 all ok 
@@ -56,10 +57,6 @@ void LWM_config_init(LMW_config *cfg)
    -3 waiting timeout, child did not finish in less than LMW_MAX_WAIT milliseconds
    >0 error in /bin/mail
 */
-
-
-
-
 
 int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) {
     int pipefd[2];
