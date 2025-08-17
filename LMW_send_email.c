@@ -114,6 +114,8 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
     if (pid == -1) {
       LMW_log_error("Failure in forking child that should send email: %d %s\n",
 		    errno, strerror(errno));
+      close(pipefd[0]);
+      close(pipefd[1]);
       if (cfg) cfg->failures++;
       return(-1);
     }
