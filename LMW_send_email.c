@@ -28,8 +28,8 @@
 */
 
 
-#define LWM_MAILER "/bin/mail"
-#define LWM_MAX_WAIT 900 // in milliseconds
+#define LMW_MAILER "/bin/mail"
+#define LMW_MAX_WAIT 900 // in milliseconds
 
 /* this code will send an email to recipient, with subject, and body 
    it will wait for at most 50milliseconds 
@@ -38,7 +38,7 @@
    0 all ok 
    -1 could not invoke /bin/mail
    -2 PIPE ERROR when sending body
-   -3 waiting timeout, child did not finish in less than LWM_MAX_WAIT milliseconds
+   -3 waiting timeout, child did not finish in less than LMW_MAX_WAIT milliseconds
    >0 error in /bin/mail
 */
 
@@ -49,7 +49,7 @@
 int LMW_send_email(char *recipient, char *subject, char *body) {
     int pipefd[2];
     pid_t pid;
-    char *args[] = {LWM_MAILER, "-s", subject, recipient,  NULL};
+    char *args[] = {LMW_MAILER, "-s", subject, recipient,  NULL};
 
     
     if (pipe(pipefd) == -1) {
@@ -95,7 +95,7 @@ int LMW_send_email(char *recipient, char *subject, char *body) {
       int count = 0;
       int status;
       pid_t wp = waitpid(pid, &status, WNOHANG);
-      while ( wp == 0 && count <  LWM_MAX_WAIT) {
+      while ( wp == 0 && count <  LMW_MAX_WAIT) {
 	if ( usleep(1000) != 0) {
 	  LMW_log_error("Error in usleep: %d %s", errno, strerror(errno));
 	  break;
