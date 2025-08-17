@@ -131,7 +131,12 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
     }
     // Parent process
     close(pipefd[0]); // Close read end
-    
+
+    // Save current SIGPIPE handler and ignore SIGPIPE temporarily
+    // We'll detect broken pipe via write() return value
+    void (*old_sigpipe_handler)(int) = signal(SIGPIPE, SIG_IGN);
+
+
     size_t l = strlen(body);
     ssize_t r;
     char *b=body;
@@ -145,6 +150,10 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
       b +=  r;
     }
     close(pipefd[1]); // EOF for child process input
+
+    // Restore previous SIGPIPE handler
+    signal(SIGPIPE, old_sigpipe_handler);
+
     
     // Wait specifically for the child process
     int count = 0;
