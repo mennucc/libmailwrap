@@ -86,9 +86,9 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
         close(pipefd[0]);
 
         execvp(args[0], args);
-	cfg->failures ++;
+        // If we get here, exec failed
         LMW_log_error("Failure in exec child that should send email: %d %s\n", errno, strerror(errno));
-	return errno;
+        _exit(errno);
     } else {
       // Parent process
       close(pipefd[0]); // Close read end
