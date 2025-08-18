@@ -4,8 +4,11 @@
    Code to send email.
 
    This code will call /bin/mail  (by forking)
-   and it will send it the body, then wait up to 50ms
+   and it will send it the body, then wait for a while,
    and report the exit status.
+
+   It is intended to be robust, to protect the calling program
+   from crashes or hangouts.
   
    Copyright (c) by Andrea C G Mennucci
    
@@ -21,21 +24,36 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU Gene
+   You should have received a copy of the GNU GPL
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
 
-#define LMW_MAILER "/bin/mail"
-#define LMW_MAX_WAIT 900 // in milliseconds
 
-typedef struct {
-  char *mailer;
-  int max_wait;  // in milliseconds
-  int failures;
-} LMW_config;
+#ifndef LWM_SKIP_HEADERS
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
+#include <unistd.h>  // getpid(2)
+#include <limits.h>  // PATH_MAX
+#include <fcntl.h>
+#endif  //LWM_SKIP_HEADERS
+
+#include "LMW_send_email.h"
+
+#ifndef LMW_log_error
+#define LMW_log_error( msg, ...) \
+    fprintf(stderr, msg, ##__VA_ARGS__)
+#endif
 
 void LWM_config_init(LMW_config *cfg)
 {

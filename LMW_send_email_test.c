@@ -43,7 +43,7 @@
 
 #define LMW_DEBUG 1
 
-#include "LMW_send_email.c"
+#include "LMW_send_email.h"
 
 int main(int argc , char *argv[])
 {
