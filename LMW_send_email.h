@@ -29,12 +29,12 @@ void LWM_config_init(LMW_config *cfg);
    (to avoid hanging the caller, if /bin/mail hangs).
    
    It will return an exit value: 
-   0 all ok 
-   -1 could not invoke /bin/mail (or specified mailer in cfg)
-   -2 PIPE ERROR when sending body
-   -3 waiting timeout, child did not finish in less than LMW_MAX_WAIT milliseconds
-   -4 child process was terminated by signal
-   >0 error code from /bin/mail
+   LMW_OK (0)                = all ok 
+   LMW_ERROR_CANNOT_CALL (-1) = could not invoke /bin/mail
+   LMW_ERROR_PIPE (-2)        = PIPE ERROR when sending body
+   LMW_ERROR_TIMEOUT (-3)     = waiting timeout, child did not finish in less than max_wait milliseconds
+   LMW_ERROR_SIGNAL (-4)      = child process was terminated by signal
+   >0                         = error code from /bin/mail
 */
 
 int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg);

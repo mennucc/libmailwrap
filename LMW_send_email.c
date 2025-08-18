@@ -56,6 +56,16 @@
     fprintf(stderr, msg, ##__VA_ARGS__)
 #endif
 
+// Error code definitions
+#define LMW_OK                    0   // All ok
+#define LMW_ERROR_CANNOT_CALL    -1   // Could not invoke /bin/mail (fork/exec failure)
+#define LMW_ERROR_PIPE           -2   // PIPE ERROR when sending body
+#define LMW_ERROR_TIMEOUT        -3   // Waiting timeout, child did not finish
+#define LMW_ERROR_SIGNAL         -4   // Child process was terminated by signal
+// Positive values (>0) are error codes from /bin/mail
+
+#define LMW_CHILD_EXEC_FAILED   127   // Standard exit code for "command not found"
+
 void LWM_config_init(LMW_config *cfg)
 {
   *cfg = (LMW_config) {
@@ -76,17 +86,27 @@ static int __LMW__process_exit_status__(int status, LMW_config *cfg)
 {
   if (WIFEXITED(status)) {
     // exited normally
-    int childstatus =    WEXITSTATUS(status);
+    int childstatus = WEXITSTATUS(status);
     if (childstatus) {
       LMW_log_error("Failure in child that should send email exit code : %d %s\n",
 		    childstatus, strerror(childstatus));
       if (cfg) cfg->failures++;
     }
     return childstatus;
-  } else { // subprocess was interrupted
-    LMW_log_error("Failure in child that should send email, terminated ?\n");
+  } else if (WIFSIGNALED(status)) {
+    // subprocess was terminated by signal
+    int sig = WTERMSIG(status);
+    LMW_log_error("Failure in child that should send email, terminated by signal %d\n", sig);
     if (cfg)  cfg->failures++;
-    return -4;
+    return LMW_ERROR_SIGNAL;
+  } else {
+    // other termination
+    LMW_log_error("Failure in child that should send email, terminated abnormally\n");
+    if (cfg)  cfg->failures++;
+    return LMW_ERROR_SIGNAL;
+  }
+}
+
 
 static void __LMW__kill_gracefully__(pid_t pid, int count, int max_wait, LMW_config *cfg)
 {
@@ -118,12 +138,12 @@ static void __LMW__kill_gracefully__(pid_t pid, int count, int max_wait, LMW_con
    it will wait for at most max_wait milliseconds
    (to avoid hanging the caller, if /bin/mail hangs) 
    and return an exit value: 
-   0 all ok 
-   -1 could not invoke /bin/mail
-   -2 PIPE ERROR when sending body
-   -3 waiting timeout, child did not finish in less than LMW_MAX_WAIT milliseconds
-   -4 child process was terminated by signal
-   >0 error code from /bin/mail
+   LMW_OK (0)                = all ok 
+   LMW_ERROR_CANNOT_CALL (-1) = could not invoke /bin/mail
+   LMW_ERROR_PIPE (-2)        = PIPE ERROR when sending body
+   LMW_ERROR_TIMEOUT (-3)     = waiting timeout, child did not finish in less than max_wait milliseconds
+   LMW_ERROR_SIGNAL (-4)      = child process was terminated by signal
+   >0                         = error code from /bin/mail
 */
 
 int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) {
@@ -137,13 +157,13 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
     if (!recipient || !subject || !body) {
         LMW_log_error("Null parameter passed to LMW_send_email\n");
         if (cfg) cfg->failures++;
-        return -1;
+        return LMW_ERROR_CANNOT_CALL;
     }
 
     if (pipe(pipefd) == -1) {
       LMW_log_error("Failure in creating pipe to send email: %d %s\n", errno, strerror(errno));
       if (cfg) cfg->failures ++;
-      return(-1);
+      return LMW_ERROR_CANNOT_CALL;
     }
 
     // Make write end non-blocking to help avoid SIGPIPE issues
@@ -159,7 +179,7 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
       close(pipefd[0]);
       close(pipefd[1]);
       if (cfg) cfg->failures++;
-      return(-1);
+      return LMW_ERROR_CANNOT_CALL;
     }
 
     if (pid == 0) {
@@ -171,7 +191,7 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
         execvp(args[0], args);
         // If we get here, exec failed
         LMW_log_error("Failure in exec child that should send email: %d %s\n", errno, strerror(errno));
-        _exit(errno);
+        _exit(LMW_CHILD_EXEC_FAILED);
     }
     // Parent process
     close(pipefd[0]); // Close read end
@@ -243,7 +263,7 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
       }
       __LMW__kill_gracefully__(pid, count, max_wait, cfg);
       if (cfg) cfg->failures++;
-      return -3;
+      return write_error ? LMW_ERROR_PIPE : LMW_ERROR_TIMEOUT;
     }
     
     // Wait specifically for the child process
@@ -263,7 +283,7 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
       __LMW__kill_gracefully__(pid, count, max_wait, cfg);
       if (cfg) cfg->failures ++;
       //... we are not waiting further..
-      return -2;
+      return LMW_ERROR_TIMEOUT;
     }
     
 #ifdef LMW_DEBUG
@@ -273,7 +293,7 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
     if ( wp == -1) {
       LMW_log_error("Failure in waiting for child that should send email\n");
       if (cfg) cfg->failures++;
-      return -2;
+      return LMW_ERROR_CANNOT_CALL;
     }
 
     return __LMW__process_exit_status__(status, cfg);
