@@ -196,6 +196,10 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
 	  usleep(1000);
 	  count ++;
 	  continue;
+	} else if (errno == EPIPE) {
+	  LMW_log_error("Broken pipe when sending email body (child may have exited early)\n");
+	  write_error = errno;
+	  break;
 	} else {
 	  LMW_log_error("Failure in piping body to send email: %d %s\n", errno, strerror(errno));
 	  write_error = errno;
