@@ -56,15 +56,7 @@
     fprintf(stderr, msg, ##__VA_ARGS__)
 #endif
 
-// Error code definitions
-#define LMW_OK                    0   // All ok
-#define LMW_ERROR_CANNOT_CALL    -1   // Could not invoke /bin/mail (fork/exec failure)
-#define LMW_ERROR_PIPE           -2   // PIPE ERROR when sending body
-#define LMW_ERROR_TIMEOUT        -3   // Waiting timeout, child did not finish
-#define LMW_ERROR_SIGNAL         -4   // Child process was terminated by signal
-// Positive values (>0) are error codes from /bin/mail
 
-#define LMW_CHILD_EXEC_FAILED   127   // Standard exit code for "command not found"
 
 void LWM_config_init(LMW_config *cfg)
 {
