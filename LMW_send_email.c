@@ -1,35 +1,22 @@
-// vim:ts=4:shiftwidth=4:et
 /*
-
-   Code to send email.
-
-   This code will call /bin/mail  (by forking)
-   and it will send it the body, then wait for a while,
-   and report the exit status.
-
-   It is intended to be robust, to protect the calling program
-   from crashes or hangouts.
-  
-   Copyright (c) by Andrea C G Mennucci
-   
-   LICENSE
-
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
-   You should have received a copy of the GNU GPL
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
-
+ * Copyright (C) 2025  Andrea C G Mennucci 
+ *
+ * This file is part of libmailwrap.
+ *
+ * libmailwrap is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * as published by the Free Software Foundation; either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * libmailwrap is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with <Project Name>; if not, see
+ * <https://www.gnu.org/licenses/>.
+ */
 
 
 #ifndef LWM_SKIP_HEADERS
