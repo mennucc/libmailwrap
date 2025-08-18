@@ -267,7 +267,6 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
     }
     
     // Wait specifically for the child process
-
     wp = waitpid(pid, &status, WNOHANG);
     while ( wp == 0 && count <  max_wait) {
       if ( usleep(1000) != 0) {

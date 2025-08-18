@@ -19,7 +19,7 @@ void LWM_config_init(LMW_config *cfg);
 /***
    This code will send an email to recipient, with subject, and body;
    it will use "/bin/mail" or other compatible program specified in cfg->mailer
-   util that follows the calling convention
+   that must follow the calling convention
    "mailer -s subject recipient"
    and that accepts the body as stdin input.
 
