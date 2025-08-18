@@ -1,15 +1,35 @@
-CFLAGS += -Wall
+CFLAGS += -Wall -fPIC
 
-all: LMW_send_email_test LMW_send_email_strestest LMW_send_email_direct
+LIBNAME = libmailwrap
+VERSION = 1.0
+SONAME = $(LIBNAME).so.$(VERSION)
+
+PREFIX ?= /usr/local
+INCLUDEDIR = $(PREFIX)/include
+LIBDIR = $(PREFIX)/lib
+
+all: $(SONAME) LMW_send_email_test LMW_send_email_stresstest LMW_send_email_direct
+
+$(SONAME): LMW_send_email.o
+	$(CC) -shared -o $(SONAME) LMW_send_email.o
+
+LMW_send_email.o: LMW_send_email.c LMW_send_email.h
+	$(CC) $(CFLAGS) -c LMW_send_email.c -o LMW_send_email.o
+
+LMW_send_email_test: LMW_send_email_test.c LMW_send_email.c LMW_send_email.h
+	$(CC) $(CFLAGS) LMW_send_email_test.c LMW_send_email.c -o LMW_send_email_test
+
+LMW_send_email_stresstest: LMW_send_email_stresstest.c LMW_send_email.c LMW_send_email.h
+	$(CC) $(CFLAGS) LMW_send_email_stresstest.c LMW_send_email.c -o LMW_send_email_stresstest
+
+LMW_send_email_direct: LMW_send_email_direct.c LMW_send_email.c LMW_send_email.h
+	$(CC) $(CFLAGS) LMW_send_email_direct.c -o LMW_send_email_direct
+
+install: $(SONAME)
+	install -d $(DESTDIR)$(INCLUDEDIR) $(DESTDIR)$(LIBDIR)
+	install -m 644 LMW_send_email.h $(DESTDIR)$(INCLUDEDIR)/
+	install -m 755 $(SONAME) $(DESTDIR)$(LIBDIR)/
+	ln -sf $(SONAME) $(DESTDIR)$(LIBDIR)/$(LIBNAME).so
 
 clean:
-	rm LMW_send_email_test LMW_send_email_strestest LMW_send_email_direct
-
-LMW_send_email_test: LMW_send_email_test.c LMW_send_email.c  LMW_send_email.h
-	$(CC) $(CFLAGS)  LMW_send_email_test.c LMW_send_email.c -o LMW_send_email_test
-
-LMW_send_email_strestest: LMW_send_email_stresstest.c LMW_send_email.c  LMW_send_email.h
-	$(CC) $(CFLAGS)  LMW_send_email_stresstest.c LMW_send_email.c -o LMW_send_email_stresstest
-
-LMW_send_email_direct: LMW_send_email_test.c LMW_send_email.c  LMW_send_email.h
-	$(CC) $(CFLAGS)  LMW_send_email_direct.c -o LMW_send_email_direct
+	rm -f *.o *.so* LMW_send_email_test LMW_send_email_stresstest LMW_send_email_direct
