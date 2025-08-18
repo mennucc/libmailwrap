@@ -46,6 +46,7 @@
 #include <unistd.h>  // getpid(2)
 #include <limits.h>  // PATH_MAX
 #include <fcntl.h>
+#include <signal.h>
 #endif  //LWM_SKIP_HEADERS
 
 #include "LMW_send_email.h"
