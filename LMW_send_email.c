@@ -205,6 +205,19 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
       l += -r;
       b +=  r;
     }
+
+
+    
+    // Add a final newline if the body doesn't end with one and we haven't had errors
+    if (!write_error && OL > 0 && body[OL - 1] != '\n') {
+        if (write(pipefd[1], "\n", 1) == -1) {
+            if (errno != EPIPE) {
+                LMW_log_error("Failed to write final newline: %d %s\n", errno, strerror(errno));
+            }
+            write_error = errno;
+        }
+    }
+    
     close(pipefd[1]); // EOF for child process input
 
     // Restore previous SIGPIPE handler
