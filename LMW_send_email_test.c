@@ -75,7 +75,7 @@ int main(int argc , char *argv[])
 
   int r;
   if (0==strcmp("TEST",recipient)) {
-    subject = "subject";
+
     fprintf(stdout,"========== test  /bin/false\n");
     cfg->mailer = "/bin/false";
     r =LMW_send_email(recipient, subject, b , cfg) ;
@@ -84,12 +84,18 @@ int main(int argc , char *argv[])
     fprintf(stdout,"========== test  nonexistent\n");
     cfg->mailer = "/nonexistent";
     r =LMW_send_email(recipient, subject, b , cfg) ;
-    fprintf(stdout,"for nonexitent mailer, return code  %d  ,failures %d \n\n", r, cfg->failures);
+    fprintf(stdout,"for nonexistent mailer, return code  %d  ,failures %d \n\n", r, cfg->failures);
 
-    fprintf(stdout,"========== test  ./sleep.sh\n");
+    fprintf(stdout,"========== test  ./sleep.sh (sleeps 10 seconds)\n");
     cfg->mailer = "./sleep.sh";
     r =LMW_send_email(recipient, subject, b , cfg) ;
     fprintf(stdout,"for sleeping mailer, return code  %d  ,failures %d \n\n", r, cfg->failures);
+
+    fprintf(stdout,"======= test  ./cat_dev_null.sh  (cat body to /dev/null, then sleeps 10 seconds)\n");
+    cfg->mailer = "./cat_dev_null.sh";
+    r =LMW_send_email(recipient, subject, b , cfg) ;
+    fprintf(stdout,"for dev_null mailer, return code  %d  ,failures %d \n\n", r, cfg->failures);
+
   } else { 
     r =LMW_send_email(recipient, subject, b , cfg) ;
     fprintf(stdout,"return code  %d  ,failures %d \n\n", r, cfg->failures);
