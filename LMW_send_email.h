@@ -20,6 +20,7 @@ typedef struct {
   char *mailer;
   int max_wait;  // in milliseconds
   int failures; // keeps count of successive failures
+  void (*log_error)(const char *msg, ...); // function pointer for logging errors
 } LMW_config;
 
 /* initialize pre-allocated config */

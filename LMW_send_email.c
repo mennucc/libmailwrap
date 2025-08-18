@@ -47,15 +47,26 @@
 #include <limits.h>  // PATH_MAX
 #include <fcntl.h>
 #include <signal.h>
+#include <stdarg.h>
 #endif  //LWM_SKIP_HEADERS
 
 #include "LMW_send_email.h"
 
-#ifndef LMW_log_error
-#define LMW_log_error( msg, ...) \
-    fprintf(stderr, msg, ##__VA_ARGS__)
-#endif
 
+
+
+// Default logging function
+static void __LMW__default_log_error(const char *msg, ...) {
+    va_list args;
+    va_start(args, msg);
+    vfprintf(stderr, msg, args);
+    va_end(args);
+}
+
+// warning: this assumes that there is a variable called "cfg"
+// of type  "LMW_config *cfg"
+#define LMW_log_error( msg, ...) \
+  { if (cfg && cfg->log_error ) cfg->log_error(msg, ##__VA_ARGS__);}
 
 
 void LWM_config_init(LMW_config *cfg)
@@ -64,6 +75,7 @@ void LWM_config_init(LMW_config *cfg)
     .mailer = LMW_MAILER,
     .max_wait = LMW_MAX_WAIT,
     .failures = 0,
+    .log_error = __LMW__default_log_error,
   };
 };
 
