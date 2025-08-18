@@ -47,16 +47,20 @@
 
 int main(int argc , char *argv[])
 {
-
-  if(argc<3) {
-    fprintf(stderr,"Usage:  %s RECIPIENT SUBJECT [BODY]\n",argv[0]);
+  if(argc<2) {// || (0!=strcmp("TEST",argv[1])) ) {
+    fprintf(stderr,"Usage:  %s RECIPIENT [SUBJECT] [BODY]\n"
+	    "  if RECIPIENT is TEST, run some tests\n"
+	    ,argv[0]);
     return(0);
   }
 
+  char *recipient= argv[1],
+    *subject = (argc>=3) ? argv[2] :  "the subject";
+  
   LMW_config *cfg = malloc(sizeof(LMW_config));
   LWM_config_init(cfg);
-  char *b;
-  if(argc==3) {
+  char *b=NULL;
+  if(argc<=3) {
     const int L=1000000;
     b = calloc(1,L+1);
     for (unsigned int i=0 ; i<L-1 ; i++ ) {
@@ -68,9 +72,28 @@ int main(int argc , char *argv[])
   } else {
     b = argv[3];
   }
-  
-  int r =LMW_send_email(argv[1], argv[2], b ,cfg) ;
-  fprintf(stdout,"return code [ %d ] \n\n",r);
+
+  int r;
+  if (0==strcmp("TEST",recipient)) {
+    subject = "subject";
+    fprintf(stdout,"========== test  /bin/false\n");
+    cfg->mailer = "/bin/false";
+    r =LMW_send_email(recipient, subject, b , cfg) ;
+    fprintf(stdout,"for /bin/false, return code  %d  ,failures %d \n\n", r, cfg->failures);
+
+    fprintf(stdout,"========== test  nonexistent\n");
+    cfg->mailer = "/nonexistent";
+    r =LMW_send_email(recipient, subject, b , cfg) ;
+    fprintf(stdout,"for nonexitent mailer, return code  %d  ,failures %d \n\n", r, cfg->failures);
+
+    fprintf(stdout,"========== test  ./sleep.sh\n");
+    cfg->mailer = "./sleep.sh";
+    r =LMW_send_email(recipient, subject, b , cfg) ;
+    fprintf(stdout,"for sleeping mailer, return code  %d  ,failures %d \n\n", r, cfg->failures);
+  } else { 
+    r =LMW_send_email(recipient, subject, b , cfg) ;
+    fprintf(stdout,"return code  %d  ,failures %d \n\n", r, cfg->failures);
+  }
 
   if(argc==3)
     free(b);
