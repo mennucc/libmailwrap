@@ -87,6 +87,29 @@ static int __LMW__process_exit_status__(int status, LMW_config *cfg)
     LMW_log_error("Failure in child that should send email, terminated ?\n");
     if (cfg)  cfg->failures++;
     return -4;
+
+static void __LMW__kill_gracefully__(pid_t pid, int count, int max_wait, LMW_config *cfg)
+{
+  pid_t wp=0;
+  int status=0;
+  // Kill the child process since we had a write problem
+  LMW_log_error("Terminating child emailer, pid %d\n", pid);
+  kill(pid, SIGTERM);
+  // Wait a bit for graceful termination
+  max_wait += 100;
+  do {
+    if ( usleep(1000) != 0) {
+      LMW_log_error("Error in usleep: %d %s\n", errno, strerror(errno));
+      break;
+    }
+    count++;
+    wp = waitpid(pid, &status, WNOHANG);
+  }   while (wp == 0 && count < max_wait);
+  if (wp == 0) {
+    // Still running, force kill
+    LMW_log_error("Killing child emailer, pid %d\n", pid);
+    kill(pid, SIGKILL);
+    waitpid(pid, NULL, 0); // This should not block after SIGKILL
   }
 }
 
@@ -201,10 +224,7 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
       if (wp == pid ) {
 	return __LMW__process_exit_status__(status, cfg);
       }
-      // Kill the child process since we had a write problem
-      LMW_log_error("Killing child emailer, pid %d\n", pid);
-      kill(pid, SIGTERM);
-      waitpid(pid, NULL, 0); // Clean up zombie
+      __LMW__kill_gracefully__(pid, count, max_wait, cfg);
       if (cfg) cfg->failures++;
       return -3;
     }
@@ -223,6 +243,7 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
     
     if ( wp == 0) {
       LMW_log_error("Timeout in waiting for child that should send email, waited %d ms\n", count);
+      __LMW__kill_gracefully__(pid, count, max_wait, cfg);
       if (cfg) cfg->failures ++;
       //... we are not waiting further..
       return -2;
