@@ -47,7 +47,7 @@ void LWM_config_init(LMW_config *cfg)
 };
 
 /* Function to make pipe non-blocking */
-static int make_nonblocking(int fd) {
+static int __LMW__make_nonblocking(int fd) {
     int flags = fcntl(fd, F_GETFL, 0);
     if (flags == -1) return -1;
     return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
@@ -105,7 +105,7 @@ int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) 
     }
 
     // Make write end non-blocking to help avoid SIGPIPE issues
-    if (make_nonblocking(pipefd[1]) == -1) {
+    if (__LMW__make_nonblocking(pipefd[1]) == -1) {
         LMW_log_error("Warning: could not make pipe non-blocking: %d %s\n", errno, strerror(errno));
         // Continue anyway - this is not fatal
     }
