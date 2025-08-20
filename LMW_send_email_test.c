@@ -63,7 +63,7 @@ int main(int argc , char *argv[])
   }
 
   int r;
-  r =LMW_send_email(recipient, subject, b , cfg) ;
+  r =LMW_send_email(cfg, recipient, subject, b);
   fprintf(stdout,"return code  %d  ,failures %d \n\n", r, cfg->failures);
 
   if(argc<=3)

@@ -94,7 +94,7 @@ Tracks internal state such as failure count.
 
 ------------------------------------------------------------------------
 
-### `int LMW_send_email(const char *to, const char *subject, const char *body, LMW_config *cfg);`
+### `int LMW_send_email(LMW_config *cfg, const char *to, const char *subject, const char *body);`
 
 Sends an email message via `/bin/mail`.
 

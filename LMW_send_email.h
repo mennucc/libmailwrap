@@ -67,7 +67,7 @@ void LWM_config_init(LMW_config *cfg);
    >0                         = error code from /bin/mail
 */
 
-int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg);
+int LMW_send_email(LMW_config *cfg, char *recipient, char *subject, char *body);
 
 
 #endif // __LWM_SEND_EMAIL_H__

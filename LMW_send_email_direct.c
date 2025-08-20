@@ -50,7 +50,7 @@ int main(int argc , char *argv[])
   LWM_config_init(cfg);
 
   int r;
-  r =LMW_send_email(recipient, subject, body , cfg) ;
+  r =LMW_send_email(cfg, recipient, subject, body) ;
   fprintf(stdout,"return code  %d  ,failures %d \n\n", r, cfg->failures);
 
   free(cfg);

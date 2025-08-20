@@ -71,23 +71,23 @@ int main(int argc , char *argv[])
   
   fprintf(stdout,"========== test  /bin/false\n");
   cfg->mailer = "/bin/false";
-  r =LMW_send_email(recipient, subject, b , cfg) ;
+  r =LMW_send_email(cfg, recipient, subject, b);
   CHECK(r, 1);
   
   fprintf(stdout,"========== test  nonexistent\n");
   cfg->mailer = "/nonexistent";
-  r =LMW_send_email(recipient, subject, b , cfg) ;
+  r =LMW_send_email(cfg, recipient, subject, b);
   CHECK(r,LMW_CHILD_EXEC_FAILED);
   
   
   fprintf(stdout,"========== test  ./sleep.sh (sleeps 10 seconds)\n");
   cfg->mailer = "./sleep.sh";
-  r =LMW_send_email(recipient, subject, b , cfg) ;
+  r =LMW_send_email(cfg, recipient, subject, b);
   CHECK(r,LMW_ERROR_PIPE);
   
   fprintf(stdout,"======= test  ./cat_dev_null.sh  (cat body to /dev/null, then sleeps 10 seconds)\n");
   cfg->mailer = "./cat_dev_null.sh";
-  r =LMW_send_email(recipient, subject, b , cfg) ;
+  r =LMW_send_email(cfg, recipient, subject, b);
   CHECK(r,LMW_ERROR_TIMEOUT);
 
   if(argc<=1)

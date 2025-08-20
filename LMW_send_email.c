@@ -137,7 +137,7 @@ static void __LMW__kill_gracefully__(pid_t pid, int count, int max_wait, LMW_con
    >0                         = error code from /bin/mail
 */
 
-int LMW_send_email(char *recipient, char *subject, char *body, LMW_config *cfg) {
+int LMW_send_email(LMW_config *cfg, char *recipient, char *subject, char *body) {
     int pipefd[2];
     pid_t pid;
     char *mailer = cfg ? cfg->mailer : LMW_MAILER;
