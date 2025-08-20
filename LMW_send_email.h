@@ -22,6 +22,7 @@
 #ifndef __LMW_SEND_EMAIL_H__
 #define  __LMW_SEND_EMAIL_H__
 
+#include <errno.h>          // <-- This provides ENOEXEC
 
 // Error code definitions, as returned by LMW_send_email()
 #define LMW_OK                    0   // All ok
@@ -30,7 +31,7 @@
 #define LMW_ERROR_TIMEOUT        -3   // Waiting timeout, child did not finish
 #define LMW_ERROR_SIGNAL         -4   // Child process was terminated by signal
 // Positive values (>0) are error codes from /bin/mail
-#define LMW_CHILD_EXEC_FAILED   127   // Standard exit code for "command not found"
+#define LMW_CHILD_EXEC_FAILED    ENOEXEC   // Standard exit code for "cannot exec"
 
 // defaults
 #define LMW_MAILER "/bin/mail"
