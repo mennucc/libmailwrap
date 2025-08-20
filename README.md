@@ -12,9 +12,11 @@ protocols directly.
 
 -   Minimal, portable C API.
 -   Relies on `/bin/mail` for actual message delivery.
--   Provides error handling via return codes and failure counters.
+-   Provides error handling via return codes, failure counters,
+    and log messages (sent to user-defined logger).
 -   Enforces a maximum time of execution, to avoid hanging the
-    calling program if `/bin/mail` hangs
+    calling program if `/bin/mail` hangs.
+-   Redirect stderr and stdout of  `/bin/mail`.
 -   Easy to embed into existing C projects.
 -   Licensed under the **GNU LGPL v3 (or later)**.
 

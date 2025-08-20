@@ -96,6 +96,45 @@ static int __LMW__process_exit_status__(int status, LMW_config *cfg)
 }
 
 
+static void __LWM_clean_up_tmp(int stdout_fd, int stderr_fd,
+			       char *stdout_path, char *stderr_path,
+			       LMW_config *cfg)
+{
+      // Now handle the temporary files
+    close(stdout_fd);
+    close(stderr_fd);
+
+    // Check stdout file
+    struct stat st;
+    if (stat(stdout_path, &st) == 0) {
+        if (st.st_size == 0) {
+            unlink(stdout_path);
+        } else {
+            LMW_log_error("Mail command stdout captured in: %s (size: %ld bytes)\n",
+                         stdout_path, (long)st.st_size);
+        }
+    } else {
+        LMW_log_error("Warning: could not stat stdout temp file %s: %d %s\n",
+                     stdout_path, errno, strerror(errno));
+        unlink(stdout_path); // Try to clean up anyway
+    }
+
+    // Check stderr file
+    if (stat(stderr_path, &st) == 0) {
+        if (st.st_size == 0) {
+            unlink(stderr_path);
+        } else {
+            LMW_log_error("Mail command stderr captured in: %s (size: %ld bytes)\n",
+                         stderr_path, (long)st.st_size);
+        }
+    } else {
+        LMW_log_error("Warning: could not stat stderr temp file %s: %d %s\n",
+                     stderr_path, errno, strerror(errno));
+        unlink(stderr_path); // Try to clean up anyway
+    }
+
+}
+
 static void __LMW__kill_gracefully__(pid_t pid, int count, int max_wait, LMW_config *cfg)
 {
   pid_t wp=0;
@@ -163,7 +202,12 @@ int LMW_send_email_argv(LMW_config *cfg, char *recipient, char *subject, char *b
     pid_t pid;
     char *mailer = cfg ? cfg->mailer : LMW_MAILER;
     int max_wait = cfg ? cfg->max_wait : LMW_MAX_WAIT;
-    
+
+    // Temporary file descriptors and paths
+    int stdout_fd = -1, stderr_fd = -1;
+    char stdout_path[] = "/tmp/lmw_stdout_XXXXXX";
+    char stderr_path[] = "/tmp/lmw_stderr_XXXXXX";
+
     // Handle null parameters
     if (!recipient || !subject || !body) {
         LMW_log_error("Null parameter passed to LMW_send_email\n");
@@ -171,8 +215,30 @@ int LMW_send_email_argv(LMW_config *cfg, char *recipient, char *subject, char *b
         return LMW_ERROR_CANNOT_CALL;
     }
 
+    // Create temporary files for stdout and stderr
+    stdout_fd = mkstemp(stdout_path);
+    if (stdout_fd == -1) {
+        LMW_log_error("Failed to create temporary file for stdout: %d %s\n", errno, strerror(errno));
+        if (cfg) cfg->failures++;
+        return LMW_ERROR_CANNOT_CALL;
+    }
+   
+    stderr_fd = mkstemp(stderr_path);
+    if (stderr_fd == -1) {
+        LMW_log_error("Failed to create temporary file for stderr: %d %s\n", errno, strerror(errno));
+        close(stdout_fd);
+        unlink(stdout_path);
+        if (cfg) cfg->failures++;
+        return LMW_ERROR_CANNOT_CALL;
+    }
+
+    // create the pipe for the body
     if (pipe(pipefd) == -1) {
       LMW_log_error("Failure in creating pipe to send email: %d %s\n", errno, strerror(errno));
+      close(stdout_fd);
+      close(stderr_fd);
+      unlink(stdout_path);
+      unlink(stderr_path);
       if (cfg) cfg->failures ++;
       return LMW_ERROR_CANNOT_CALL;
     }
@@ -189,6 +255,10 @@ int LMW_send_email_argv(LMW_config *cfg, char *recipient, char *subject, char *b
 		    errno, strerror(errno));
       close(pipefd[0]);
       close(pipefd[1]);
+      close(stdout_fd);
+      close(stderr_fd);
+      unlink(stdout_path);
+      unlink(stderr_path);
       if (cfg) cfg->failures++;
       return LMW_ERROR_CANNOT_CALL;
     }
@@ -198,6 +268,16 @@ int LMW_send_email_argv(LMW_config *cfg, char *recipient, char *subject, char *b
         close(pipefd[1]);    // Close write end
         dup2(pipefd[0], STDIN_FILENO); // Redirect pipe read end to stdin
         close(pipefd[0]);
+
+        // Save original stdout,stderr before redirecting (for error reporting if exec fails)
+        int orig_stdout = dup(STDOUT_FILENO);
+        int orig_stderr = dup(STDERR_FILENO);
+
+        // Redirect stdout and stderr to temporary files
+        dup2(stdout_fd, STDOUT_FILENO);
+        dup2(stderr_fd, STDERR_FILENO);
+        close(stdout_fd);
+        close(stderr_fd);
 
 	char *args[5+argc];
 	args[0] = mailer;
@@ -210,7 +290,13 @@ int LMW_send_email_argv(LMW_config *cfg, char *recipient, char *subject, char *b
 
         execvp(args[0], args);
         // If we get here, exec failed
-        LMW_log_error("Failure in exec child that should send email: %d %s\n", errno, strerror(errno));
+        int saved_errno = errno; // Save errno before any system calls
+	dup2(orig_stdout, STDOUT_FILENO); // Restore original stdout
+        dup2(orig_stderr, STDERR_FILENO); // Restore original stderr
+        close(orig_stdout);
+	close(orig_stderr);
+        LMW_log_error("Failure in exec child that should send email: %d %s\n", saved_errno, strerror(saved_errno));
+	// exit
         _exit(LMW_CHILD_EXEC_FAILED);
     }
     // Parent process
@@ -312,9 +398,11 @@ int LMW_send_email_argv(LMW_config *cfg, char *recipient, char *subject, char *b
     if ( wp == -1) {
       LMW_log_error("Failure in waiting for child that should send email\n");
       if (cfg) cfg->failures++;
+      __LWM_clean_up_tmp(stdout_fd, stderr_fd, stdout_path, stderr_path, cfg);
       return LMW_ERROR_CANNOT_CALL;
     }
 
+    __LWM_clean_up_tmp(stdout_fd, stderr_fd, stdout_path, stderr_path, cfg);
     return __LMW__process_exit_status__(status, cfg);
 }
 
