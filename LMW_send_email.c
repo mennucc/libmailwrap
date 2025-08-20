@@ -96,7 +96,7 @@ static int __LMW__process_exit_status__(int status, LMW_config *cfg)
 }
 
 
-static void __LWM_clean_up_tmp(int stdout_fd, int stderr_fd,
+static void __LMW_clean_up_tmp(int stdout_fd, int stderr_fd,
 			       char *stdout_path, char *stderr_path,
 			       LMW_config *cfg)
 {
@@ -365,10 +365,12 @@ int LMW_send_email_argv(LMW_config *cfg, char *recipient, char *subject, char *b
       usleep(1000);
       wp = waitpid(pid, &status, WNOHANG);
       if (wp == pid ) {
+	__LMW_clean_up_tmp(stdout_fd, stderr_fd, stdout_path, stderr_path, cfg);
 	return __LMW__process_exit_status__(status, cfg);
       }
       __LMW__kill_gracefully__(pid, count, max_wait, cfg);
       if (cfg) cfg->failures++;
+      __LMW_clean_up_tmp(stdout_fd, stderr_fd, stdout_path, stderr_path, cfg);
       return write_error ? LMW_ERROR_PIPE : LMW_ERROR_TIMEOUT;
     }
     
@@ -387,7 +389,7 @@ int LMW_send_email_argv(LMW_config *cfg, char *recipient, char *subject, char *b
       LMW_log_error("Timeout in waiting for child that should send email, waited %d ms\n", count);
       __LMW__kill_gracefully__(pid, count, max_wait, cfg);
       if (cfg) cfg->failures ++;
-      //... we are not waiting further..
+      __LMW_clean_up_tmp(stdout_fd, stderr_fd, stdout_path, stderr_path, cfg);
       return LMW_ERROR_TIMEOUT;
     }
     
@@ -398,11 +400,11 @@ int LMW_send_email_argv(LMW_config *cfg, char *recipient, char *subject, char *b
     if ( wp == -1) {
       LMW_log_error("Failure in waiting for child that should send email\n");
       if (cfg) cfg->failures++;
-      __LWM_clean_up_tmp(stdout_fd, stderr_fd, stdout_path, stderr_path, cfg);
+      __LMW_clean_up_tmp(stdout_fd, stderr_fd, stdout_path, stderr_path, cfg);
       return LMW_ERROR_CANNOT_CALL;
     }
 
-    __LWM_clean_up_tmp(stdout_fd, stderr_fd, stdout_path, stderr_path, cfg);
+    __LMW_clean_up_tmp(stdout_fd, stderr_fd, stdout_path, stderr_path, cfg);
     return __LMW__process_exit_status__(status, cfg);
 }
 
