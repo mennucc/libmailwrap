@@ -114,6 +114,8 @@ It is also possible to specify arguments to be passed to `/bin/mail` , with the 
  - `int LMW_send_email_argc(LMW_config *cfg, char *recipient, char *subject, char *body, int argc, ...);`
  - `int LMW_send_email_argv(LMW_config *cfg, char *recipient, char *subject, char *body, int argc, char *argv[]);`
 
+See example `LMW_send_email_attach.c` on how to send
+a file as attachment.
  
 ------------------------------------------------------------------------
 
