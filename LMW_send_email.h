@@ -36,6 +36,9 @@
 #define LMW_MAILER "/bin/mail"
 #define LMW_MAX_WAIT 900 // in milliseconds
 
+// maximum length of extra string arguments for LMW_send_email_argc()
+#define LMW_SEND_EMAIL_MAX_LEN_ARGS 512
+
 typedef struct {
   char *mailer;
   int max_wait;  // in milliseconds
@@ -47,11 +50,15 @@ typedef struct {
 void LWM_config_init(LMW_config *cfg);
 
 /***
+   LMW_send_email()
+    
    This code will send an email to recipient, with subject, and body;
    it will use "/bin/mail" or other compatible program specified in cfg->mailer
    that must follow the calling convention
    "mailer -s subject recipient"
    and that accepts the body as stdin input.
+
+   (Both the implementations in GNU mailutils and BSD work fine).
 
    It can be called with cfg=NULL (defaults will be used);
    
@@ -69,5 +76,25 @@ void LWM_config_init(LMW_config *cfg);
 
 int LMW_send_email(LMW_config *cfg, char *recipient, char *subject, char *body);
 
+
+/**
+   LMW_send_email_argc() is as LMW_send_email() ,
+
+   but will accept `argc` extra arguments that will be passed to `/bin/mail`;
+   each must be a `char *` , null terminated, of length at most LMW_SEND_EMAIL_MAX_LEN_ARGS
+
+*/
+
+int LMW_send_email_argc(LMW_config *cfg, char *recipient, char *subject, char *body, int argc, ...);
+
+
+/**
+   LMW_send_email_argv() is  as LMW_send_email() ,
+
+   but will accept `argc` extra arguments, that are the strings in `argv`
+   that will be passed to `/bin/mail`
+
+*/
+int LMW_send_email_argv(LMW_config *cfg, char *recipient, char *subject, char *body, int argc, char *argv[]);
 
 #endif // __LWM_SEND_EMAIL_H__

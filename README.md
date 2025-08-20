@@ -98,21 +98,27 @@ Tracks internal state such as failure count.
 
 Sends an email message via `/bin/mail`.
 
--   **to** -- recipient email address\
--   **subject** -- subject line\
--   **body** -- plain text body\
+-   **to** -- recipient email address
+-   **subject** -- subject line
+-   **body** -- plain text body
 -   **cfg** -- pointer to a `LMW_config` struct
 
 **Returns:** - `0` on success\
 - Non-zero on error (also increments `cfg->failures`)
   see `LWM_send_mail.h` for return codes.
 
+It is also possible to specify arguments to be passed to `/bin/mail` , with the calls
+
+ - `int LMW_send_email_argc(LMW_config *cfg, char *recipient, char *subject, char *body, int argc, ...);`
+ - `int LMW_send_email_argv(LMW_config *cfg, char *recipient, char *subject, char *body, int argc, char *argv[]);`
+
+ 
 ------------------------------------------------------------------------
 
 ## Platform Support
 
 -   **Supported**: Unix-like systems (Linux, BSD, macOS) that provide
-    `/bin/mail`.\
+    `/bin/mail` (Either the BSD version or the `GNU mailutils` version).
 -   **Not supported**: Windows and other systems without `/bin/mail`.
 
 If you need cross-platform support, you may have to provide your own

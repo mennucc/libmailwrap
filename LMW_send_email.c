@@ -39,9 +39,6 @@
 
 #include "LMW_send_email.h"
 
-
-
-
 // Default logging function
 static void __LMW__default_log_error(const char *msg, ...) {
     va_list args;
@@ -137,12 +134,35 @@ static void __LMW__kill_gracefully__(pid_t pid, int count, int max_wait, LMW_con
    >0                         = error code from /bin/mail
 */
 
+
 int LMW_send_email(LMW_config *cfg, char *recipient, char *subject, char *body) {
+  char *argv[1] = { NULL };
+  int ret = LMW_send_email_argv(cfg, recipient, subject, body, 0, argv);
+  return ret;
+}
+
+
+int LMW_send_email_argc(LMW_config *cfg, char *recipient, char *subject, char *body, int argc, ...) {
+    char **argv = calloc(sizeof(char *), argc+1);
+    va_list ap;
+    va_start(ap, argc);
+    for (int j = 0; j < argc; j++) {
+      argv[j] = strndup(va_arg(ap, char *), LMW_SEND_EMAIL_MAX_LEN_ARGS);
+    }
+    va_end(ap);
+    argv[argc] = NULL;
+    int ret = LMW_send_email_argv(cfg, recipient, subject, body, argc, argv);
+    for(int j=0; j< argc; j++)
+      free(argv[j]);
+    free(argv);
+    return ret;
+}
+
+int LMW_send_email_argv(LMW_config *cfg, char *recipient, char *subject, char *body, int argc, char *argv[]) {
     int pipefd[2];
     pid_t pid;
     char *mailer = cfg ? cfg->mailer : LMW_MAILER;
     int max_wait = cfg ? cfg->max_wait : LMW_MAX_WAIT;
-    char *args[] = {mailer, "-s", subject, recipient, NULL};
     
     // Handle null parameters
     if (!recipient || !subject || !body) {
@@ -178,6 +198,15 @@ int LMW_send_email(LMW_config *cfg, char *recipient, char *subject, char *body) 
         close(pipefd[1]);    // Close write end
         dup2(pipefd[0], STDIN_FILENO); // Redirect pipe read end to stdin
         close(pipefd[0]);
+
+	char *args[5+argc];
+	args[0] = mailer;
+	args[1] = "-s";
+	args[2] = subject;
+	for(int j=0; j<argc; j++)
+	  args[3+j] = argv[j];
+	args[3 + argc] =  recipient;
+	args[4 + argc] =  NULL;
 
         execvp(args[0], args);
         // If we get here, exec failed
