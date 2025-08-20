@@ -43,7 +43,7 @@ int main(int argc , char *argv[])
     *subject = (argc>=3) ? argv[2] :  "the subject";
   
   LMW_config *cfg = malloc(sizeof(LMW_config));
-  LWM_config_init(cfg);
+  LMW_config_init(cfg);
   char *b=NULL;
   if(argc<=3) {
     const int L=2000000;

@@ -47,7 +47,7 @@ int main(int argc , char *argv[])
     *body =  argv[3];
   
   LMW_config *cfg = malloc(sizeof(LMW_config));
-  LWM_config_init(cfg);
+  LMW_config_init(cfg);
 
   int r;
   r =LMW_send_email(cfg, recipient, subject, body) ;

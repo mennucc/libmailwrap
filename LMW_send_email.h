@@ -19,8 +19,8 @@
  */
 
 
-#ifndef __LWM_SEND_EMAIL_H__
-#define  __LWM_SEND_EMAIL_H__
+#ifndef __LMW_SEND_EMAIL_H__
+#define  __LMW_SEND_EMAIL_H__
 
 
 // Error code definitions, as returned by LMW_send_email()
@@ -47,7 +47,7 @@ typedef struct {
 } LMW_config;
 
 /* initialize pre-allocated config */
-void LWM_config_init(LMW_config *cfg);
+void LMW_config_init(LMW_config *cfg);
 
 /***
    LMW_send_email()
@@ -97,4 +97,4 @@ int LMW_send_email_argc(LMW_config *cfg, char *recipient, char *subject, char *b
 */
 int LMW_send_email_argv(LMW_config *cfg, char *recipient, char *subject, char *body, int argc, char *argv[]);
 
-#endif // __LWM_SEND_EMAIL_H__
+#endif // __LMW_SEND_EMAIL_H__

@@ -19,7 +19,7 @@
  */
 
 
-#ifndef LWM_SKIP_HEADERS
+#ifndef LMW_SKIP_HEADERS
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -35,7 +35,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <stdarg.h>
-#endif  //LWM_SKIP_HEADERS
+#endif  //LMW_SKIP_HEADERS
 
 #include "LMW_send_email.h"
 
@@ -53,7 +53,7 @@ static void __LMW__default_log_error(const char *msg, ...) {
   { if (cfg && cfg->log_error ) cfg->log_error(msg, ##__VA_ARGS__);}
 
 
-void LWM_config_init(LMW_config *cfg)
+void LMW_config_init(LMW_config *cfg)
 {
   *cfg = (LMW_config) {
     .mailer = LMW_MAILER,

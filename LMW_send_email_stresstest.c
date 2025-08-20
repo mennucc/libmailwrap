@@ -45,7 +45,7 @@ int main(int argc , char *argv[])
   char *subject =  "the subject";
   
   LMW_config *cfg = malloc(sizeof(LMW_config));
-  LWM_config_init(cfg);
+  LMW_config_init(cfg);
   char *b=NULL;
   if(argc<=1) {
     const int L=2000000;
