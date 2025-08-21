@@ -25,7 +25,7 @@ LMW_send_email_in_thread.o: LMW_send_email_in_thread.c LMW_send_email_in_thread.
 
 install: $(SONAME)
 	install -d $(DESTDIR)$(INCLUDEDIR) $(DESTDIR)$(LIBDIR)
-	install -m 644 LMW_send_email.h $(DESTDIR)$(INCLUDEDIR)/
+	install -m 644 LMW_send_email.h LMW_send_email_in_thread.h $(DESTDIR)$(INCLUDEDIR)/
 	install -m 755 $(SONAME) $(DESTDIR)$(LIBDIR)/
 	ln -sf $(SONAME) $(DESTDIR)$(LIBDIR)/$(LIBNAME).so
 

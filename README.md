@@ -34,7 +34,7 @@ sudo make install
 This will:
 
 -   Build `libmailwrap.so.1.0` (shared library).
--   Install the header file (`LMW_send_email.h`) to
+-   Install the header file (`LMW_send_email.h` and `LMW_send_email_in_thread.h`) to
     `/usr/local/include`.
 -   Install the library (`libmailwrap.so.1.0`) to `/usr/local/lib` and
     create a `libmailwrap.so` symlink.
