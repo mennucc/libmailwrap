@@ -116,7 +116,23 @@ It is also possible to specify arguments to be passed to `/bin/mail` , with the 
 
 See example `LMW_send_email_attach.c` on how to send
 a file as attachment.
- 
+
+Include  `LMW_send_email.h` for the above calls.
+
+------------------------------------------------------------------------
+
+### `LMW_thread_context* LMW_send_email_argv_thread_start(LMW_config *cfg, char *recipient, char *subject, char *body, int argc, char *argv[]);`
+
+Starts a thread to send the email, then call
+
+ - `int LMW_send_email_thread_check(LMW_thread_context *ctx);`
+   to check if thread has ended, and eventually
+
+ - `int LMW_send_email_thread_wait(LMW_thread_context *ctx);`
+   to wait for threading completion and get return value.
+
+Include  `LMW_send_email_in_thread.h` for the above calls.
+
 ------------------------------------------------------------------------
 
 ## Platform Support

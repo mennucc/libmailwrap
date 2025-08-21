@@ -12,12 +12,15 @@ ALLBIN = LMW_send_email_test LMW_send_email_stresstest LMW_send_email_direct LMW
 all: $(SONAME)
 	make -C examples
 
-$(SONAME): LMW_send_email.o
-	$(CC) -shared -o $(SONAME) LMW_send_email.o
+$(SONAME): LMW_send_email.o  LMW_send_email_in_thread.o
+	$(CC) -shared -o $(SONAME) LMW_send_email.o  LMW_send_email_in_thread.o
 	ln -sf $(SONAME) $(LIBNAME).so
 
 LMW_send_email.o: LMW_send_email.c LMW_send_email.h
 	$(CC) $(CFLAGS) -c LMW_send_email.c -o LMW_send_email.o
+
+LMW_send_email_in_thread.o: LMW_send_email_in_thread.c LMW_send_email_in_thread.h LMW_send_email.h
+	$(CC) $(CFLAGS) -c LMW_send_email_in_thread.c -o LMW_send_email_in_thread.o
 
 
 install: $(SONAME)

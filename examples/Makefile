@@ -1,4 +1,4 @@
-ALLBIN = LMW_send_email_test LMW_send_email_stresstest_elf LMW_send_email_direct LMW_send_email_attach_elf
+ALLBIN = LMW_send_email_test LMW_send_email_stresstest_elf LMW_send_email_direct LMW_send_email_attach_elf LMW_send_email_thread_test_elf
 
 all: $(ALLBIN)
 
@@ -20,6 +20,9 @@ LMW_send_email_direct: LMW_send_email_direct.c ../LMW_send_email.c ../LMW_send_e
 ## linking to the .so
 LMW_send_email_attach_elf: LMW_send_email_attach.c ../LMW_send_email.h $(SONAME)
 	$(CC) $(CFLAGS) LMW_send_email_attach.c  -l mailwrap -o LMW_send_email_attach_elf
+
+LMW_send_email_thread_test_elf: LMW_send_email_thread_test.c ../LMW_send_email.h $(SONAME)
+	$(CC) $(CFLAGS) LMW_send_email_thread_test.c  -l mailwrap -o LMW_send_email_thread_test_elf
 
 clean:
 	rm -f *.o  $(ALLBIN)
